@@ -1,0 +1,337 @@
+(function () {
+  "use strict";
+
+  const STORAGE_KEY = "easynote.cards.v1";
+
+  /** @type {{id:string, title:string, body:string, tags:string[], createdAt:number, updatedAt:number}[]} */
+  let notes = [];
+  let activeTag = "__all__";
+  let searchTerm = "";
+
+  // ---------- Elements ----------
+  const cardGrid = document.getElementById("cardGrid");
+  const tagList = document.getElementById("tagList");
+  const searchInput = document.getElementById("searchInput");
+  const viewTitle = document.getElementById("viewTitle");
+  const viewSub = document.getElementById("viewSub");
+  const noResults = document.getElementById("noResults");
+  const emptyHint = document.getElementById("emptyHint");
+  const countAll = document.getElementById("countAll");
+
+  const overlay = document.getElementById("overlay");
+  const noteForm = document.getElementById("noteForm");
+  const editId = document.getElementById("editId");
+  const titleInput = document.getElementById("titleInput");
+  const bodyInput = document.getElementById("bodyInput");
+  const tagInput = document.getElementById("tagInput");
+  const newCardBtn = document.getElementById("newCardBtn");
+  const cancelBtn = document.getElementById("cancelBtn");
+
+  const confirmOverlay = document.getElementById("confirmOverlay");
+  const confirmDelete = document.getElementById("confirmDelete");
+  const confirmCancel = document.getElementById("confirmCancel");
+  let pendingDeleteId = null;
+
+  // ---------- Storage ----------
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      notes = raw ? JSON.parse(raw) : seedNotes();
+    } catch (e) {
+      console.error("Failed to load notes", e);
+      notes = seedNotes();
+    }
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    } catch (e) {
+      console.error("Failed to save notes", e);
+    }
+  }
+
+  function seedNotes() {
+    const now = Date.now();
+    return [
+      {
+        id: crypto.randomUUID(),
+        title: "Welcome to EasyNote",
+        body: "This is your card catalog. Click \u201c+ New card\u201d to write a note, give it tags, and file it away. Click any card to edit it, or use the trash icon to delete it.",
+        tags: ["welcome"],
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: crypto.randomUUID(),
+        title: "Try tagging a note",
+        body: "Tags show up in the drawer on the left. Click a tag to filter your cards, or click \u201cAll cards\u201d to see everything again.",
+        tags: ["welcome", "howto"],
+        createdAt: now - 1000,
+        updatedAt: now - 1000,
+      },
+    ];
+  }
+
+  // ---------- Helpers ----------
+  function parseTags(raw) {
+    return Array.from(
+      new Set(
+        raw
+          .split(",")
+          .map((t) => t.trim().toLowerCase())
+          .filter(Boolean)
+      )
+    );
+  }
+
+  function allTags() {
+    const set = new Set();
+    notes.forEach((n) => n.tags.forEach((t) => set.add(t)));
+    return Array.from(set).sort();
+  }
+
+  function tiltFor(id) {
+    // deterministic small tilt per card for a hand-filed feel
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) % 1000;
+    const deg = (hash % 7) - 3; // -3..3
+    return deg + "deg";
+  }
+
+  function formatDate(ts) {
+    const d = new Date(ts);
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ---------- Rendering ----------
+  function render() {
+    renderTagList();
+    renderCards();
+  }
+
+  function renderTagList() {
+    const tags = allTags();
+    countAll.textContent = notes.length;
+
+    const chips = [
+      `<button class="tag-chip ${activeTag === "__all__" ? "active" : ""}" data-tag="__all__">All cards <span class="count">${notes.length}</span></button>`,
+    ];
+
+    tags.forEach((tag) => {
+      const count = notes.filter((n) => n.tags.includes(tag)).length;
+      chips.push(
+        `<button class="tag-chip ${activeTag === tag ? "active" : ""}" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)} <span class="count">${count}</span></button>`
+      );
+    });
+
+    tagList.innerHTML = chips.join("");
+
+    tagList.querySelectorAll(".tag-chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeTag = btn.dataset.tag;
+        render();
+      });
+    });
+
+    emptyHint.style.display = notes.length === 0 ? "block" : "none";
+  }
+
+  function getFilteredNotes() {
+    let list = notes.slice().sort((a, b) => b.updatedAt - a.updatedAt);
+
+    if (activeTag !== "__all__") {
+      list = list.filter((n) => n.tags.includes(activeTag));
+    }
+
+    if (searchTerm.trim()) {
+      const q = searchTerm.trim().toLowerCase();
+      list = list.filter(
+        (n) =>
+          n.title.toLowerCase().includes(q) ||
+          n.body.toLowerCase().includes(q) ||
+          n.tags.some((t) => t.includes(q))
+      );
+    }
+
+    return list;
+  }
+
+  function renderCards() {
+    const list = getFilteredNotes();
+
+    viewTitle.textContent = activeTag === "__all__" ? "All cards" : `Tagged “${activeTag}”`;
+    viewSub.textContent = `${list.length} note${list.length === 1 ? "" : "s"}`;
+
+    if (list.length === 0) {
+      cardGrid.innerHTML = "";
+      noResults.classList.remove("hidden");
+      noResults.querySelector("p").textContent =
+        notes.length === 0
+          ? "No cards yet. Click “+ New card” to write your first note."
+          : "No cards match that search.";
+      return;
+    }
+    noResults.classList.add("hidden");
+
+    cardGrid.innerHTML = list
+      .map((n) => {
+        const primaryTag = n.tags[0];
+        return `
+        <article class="index-card" style="--tilt:${tiltFor(n.id)}" data-id="${n.id}">
+          ${primaryTag ? `<span class="card-tab">${escapeHtml(primaryTag)}</span>` : ""}
+          <h3 class="card-title">${escapeHtml(n.title)}</h3>
+          <p class="card-body">${escapeHtml(n.body)}</p>
+          ${
+            n.tags.length
+              ? `<div class="card-tags">${n.tags.map((t) => `<span class="card-tag-pill">#${escapeHtml(t)}</span>`).join("")}</div>`
+              : ""
+          }
+          <div class="card-meta">
+            <span class="card-date">${formatDate(n.updatedAt)}</span>
+            <div class="card-actions">
+              <button class="icon-btn edit-btn" title="Edit card">✎ Edit</button>
+              <button class="icon-btn danger delete-btn" title="Delete card">🗑 Delete</button>
+            </div>
+          </div>
+        </article>`;
+      })
+      .join("");
+
+    cardGrid.querySelectorAll(".edit-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const id = btn.closest(".index-card").dataset.id;
+        openForm(id);
+      });
+    });
+
+    cardGrid.querySelectorAll(".delete-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const id = btn.closest(".index-card").dataset.id;
+        pendingDeleteId = id;
+        confirmOverlay.classList.remove("hidden");
+      });
+    });
+
+    cardGrid.querySelectorAll(".index-card").forEach((card) => {
+      card.addEventListener("click", () => openForm(card.dataset.id));
+    });
+  }
+
+  // ---------- Form (add/edit) ----------
+  function openForm(id) {
+    noteForm.reset();
+    if (id) {
+      const note = notes.find((n) => n.id === id);
+      if (!note) return;
+      editId.value = note.id;
+      titleInput.value = note.title;
+      bodyInput.value = note.body;
+      tagInput.value = note.tags.join(", ");
+    } else {
+      editId.value = "";
+    }
+    overlay.classList.remove("hidden");
+    setTimeout(() => titleInput.focus(), 50);
+  }
+
+  function closeForm() {
+    overlay.classList.add("hidden");
+    noteForm.reset();
+    editId.value = "";
+  }
+
+  noteForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const title = titleInput.value.trim();
+    const body = bodyInput.value.trim();
+    const tags = parseTags(tagInput.value);
+    if (!title || !body) return;
+
+    const now = Date.now();
+
+    if (editId.value) {
+      const note = notes.find((n) => n.id === editId.value);
+      if (note) {
+        note.title = title;
+        note.body = body;
+        note.tags = tags;
+        note.updatedAt = now;
+      }
+    } else {
+      notes.push({
+        id: crypto.randomUUID(),
+        title,
+        body,
+        tags,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    save();
+    closeForm();
+    render();
+  });
+
+  newCardBtn.addEventListener("click", () => openForm(null));
+  cancelBtn.addEventListener("click", closeForm);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeForm();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (!overlay.classList.contains("hidden")) closeForm();
+      if (!confirmOverlay.classList.contains("hidden")) {
+        confirmOverlay.classList.add("hidden");
+        pendingDeleteId = null;
+      }
+    }
+  });
+
+  // ---------- Delete confirm ----------
+  confirmDelete.addEventListener("click", () => {
+    if (pendingDeleteId) {
+      notes = notes.filter((n) => n.id !== pendingDeleteId);
+      save();
+      // if the deleted note's tag no longer exists and it was active, reset filter
+      if (activeTag !== "__all__" && !allTags().includes(activeTag)) {
+        activeTag = "__all__";
+      }
+      render();
+    }
+    pendingDeleteId = null;
+    confirmOverlay.classList.add("hidden");
+  });
+
+  confirmCancel.addEventListener("click", () => {
+    pendingDeleteId = null;
+    confirmOverlay.classList.add("hidden");
+  });
+
+  confirmOverlay.addEventListener("click", (e) => {
+    if (e.target === confirmOverlay) {
+      pendingDeleteId = null;
+      confirmOverlay.classList.add("hidden");
+    }
+  });
+
+  // ---------- Search ----------
+  searchInput.addEventListener("input", (e) => {
+    searchTerm = e.target.value;
+    renderCards();
+  });
+
+  // ---------- Init ----------
+  load();
+  render();
+})();
