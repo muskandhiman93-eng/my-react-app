@@ -9,7 +9,7 @@ function Sidebar() {
                     <span className="fs-5 fw-semibold">Info</span> </a>
                 <ul className="list-unstyled ps-0">
                 <li className="mb-1">
-                    <button className="resume-btn" onClick={() => window.open("/resume.pdf", "_blank")}>
+                    <button className="resume-btn" onClick={() => window.open("/resume.png", "_blank")}>
   📄 Resume
 </button>
                    

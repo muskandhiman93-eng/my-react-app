@@ -34,7 +34,7 @@ export default function Main() {
             </div>
         </div>
 
-        {/* 👇 Card ko yahin rakho */}
+        
         <div className="code-card">
             <div className="code-header">
                 <span className="dot-red"></span>
@@ -45,7 +45,7 @@ export default function Main() {
             </div>
 
 <pre>{`{
-"name":"Muskan",
+"name":"Muskan Dhiman",
 "role":"Web Developer",
 "focus":["React","Bootstrap"],
 "stack":["HTML","CSS","React"],
