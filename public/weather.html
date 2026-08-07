@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>project</title>
+    <style>
+        img {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+            border-radius: 10px;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fb;
+            margin: 0;
+            padding: 40px;
+        }
+
+        div {
+            background: #fff;
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            color: #2563eb;
+            margin-bottom: 15px;
+            border-left: 5px solid #2563eb;
+            padding-left: 10px;
+            font-size: 24px;
+        }
+
+        p {
+            color: #555;
+            line-height: 1.7;
+            font-size: 16px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            background: #f8f9fc;
+            margin: 10px 0;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border-left: 4px solid #2563eb;
+            transition: 0.3s;
+        }
+
+        li:hover {
+            background: #2563eb;
+            color: white;
+            transform: translateX(8px);
+        }
+
+        .cards {
+            display: flex;
+            gap: 20px;
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .cards>div {
+            flex: 1;
+        }
+
+        @media (max-width:768px) {
+            .cards {
+                flex-direction: column;
+            }
+        }
+        .buttons{
+    display:flex;
+    gap:15px;
+    margin-top:30px;
+}
+
+.btn{
+    padding:12px 28px;
+    border-radius:8px;
+    text-decoration:none;
+    font-weight:600;
+    font-size:16px;
+    transition:.3s;
+}
+
+.btn:first-child{
+    background:#2563eb;
+    color:#fff;
+}
+
+.btn:first-child:hover{
+    background:#ffffff;
+    color:#2563eb;
+    ;
+}
+
+.btn:last-child{
+    background:#fff;
+    color:#2563eb;
+    ;
+}
+
+.btn:last-child:hover{
+    background:#2563eb;
+    color:#fff;
+}
+    </style>
+</head>
+
+<body>
+    <div className="weather-header">
+        <h1>Weather App</h1>
+    </div>
+    <div classname="weather-container">
+        <img src="Weather.png" alt="Weather Image">
+    </div>
+    <div classname="weatherabout">
+        <p>
+            About
+            A modern Weather App built with HTML, CSS, and JavaScript using WeatherAPI.
+            It provides real-time weather information, including temperature,
+            humidity, wind speed, feels-like temperature, and weather conditions.
+            The application features a responsive glassmorphism UI, dark/light
+            theme toggle, and local storage support to save user preferences.
+
+        </p>
+    </div>
+    <div class="card">
+        <div>
+            <h2>technologies used</h2>
+            <ul>
+
+                <li>HTML</li>
+                <li>CSS</li>
+                <li>JAVASCRIPT</li>
+                <li>WEATHERAPI</li>
+
+            </ul>
+
+        </div>
+        <div>
+            <h2>Features</h2>
+            <ul>
+                <li>✔ Search weather by city</li>
+                <li>✔ Real-time weather updates</li>
+                <li>✔ Temperature & Feels Like</li>
+                <li>✔ Humidity & Wind Speed</li>
+                <li>✔ Dark / Light Mode</li>
+                <li>✔ Responsive Design</li>
+                <li>✔ Local Storage</li>
+            </ul>
+
+        </div>
+    </div>
+    <div class="buttons">
+    <a href="https://weather-app-indol-beta-99.vercel.app/" target="_blank" class="btn">
+        Live Demo
+    </a>
+
+    <a href="https://github.com/muskandhiman93-eng/weather-app.git" target="_blank" class="btn">
+        Source Code
+    </a>
+</div>
+    <div>
+        
+    </div>
+
+</body>
+
+</html>

@@ -12,6 +12,7 @@ function Sidebar() {
                     <button className="resume-btn" onClick={() => window.open("/resume.png", "_blank")}>
   📄 Resume
 </button>
+
                    
                 </li>
                 </ul>

@@ -8,20 +8,22 @@ function Work() {
               <h2>Recent projects</h2>
             </div>
             <div className="projects-grid">
-              <a className="project-card" href="#">
+              <a  className="project-card" href="/weather.html"
+              target="_blank" rel="noopener noreferrer">
+                  
                 <div className="project-top">
-                  <span className="fname">ledger-api/</span>
+                  <span className="fname">weather-app</span>
                   <span className="arrow">↗</span>
                 </div>
                 <p>
-                  A double-entry accounting API handling multi-currency
-                  transactions for a small fintech, built to survive audits
-                  and traffic spikes alike.
+                 A modern Weather App built with HTML, CSS, and JavaScript using WeatherAPI.
+                  It provides real-time weather information, including temperature,
+                   humidity, wind speed, and weather conditions, with a responsive UI and dark/light theme support.
                 </p>
                 <div className="project-tags">
-                  <span>Go</span>
-                  <span>PostgreSQL</span>
-                  <span>Docker</span>
+                  <span>HTML</span>
+                  <span>CSS</span>
+                  <span>JS</span>
                 </div>
               </a>
               <a className="project-card" href="#">
